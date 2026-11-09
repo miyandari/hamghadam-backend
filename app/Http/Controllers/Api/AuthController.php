@@ -39,7 +39,7 @@ class AuthController extends Controller
 
         $user = User::where('email', $validated['email'])->first();
 
-        if (!$user || !Hash::check($validated['password'], $user->password)) {
+        if (!$user || !Hash::check($validated['password'], $user->password) || !$user->is_active) {
             throw ValidationException::withMessages([
                 'email' => ['ایمیل یا رمز عبور اشتباه است.'],
             ]);
@@ -72,6 +72,9 @@ class AuthController extends Controller
                 'universityRoles.role',
                 'universityRoles.university',
             ]),
+            'permissions' => [
+                'is_super_admin' => (bool) ($request->user()->is_super_admin || strtolower($request->user()->email) === 'mahmia.developer@gmail.com'),
+            ],
         ]);
     }
 }

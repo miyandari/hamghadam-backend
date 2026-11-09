@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 namespace App\Models;
 
@@ -7,6 +7,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Feedback extends Model
 {
+    // The migration creates `feedbacks`; Laravel otherwise infers `feedback`
+    // because Feedback is treated as an uncountable noun.
+    protected $table = 'feedbacks';
+
     protected $fillable = [
         'event_id', 'user_id', 'rating', 'comment', 'is_anonymous', 'is_visible'
     ];

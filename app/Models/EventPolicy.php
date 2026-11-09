@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 namespace App\Models;
 
@@ -9,7 +9,7 @@ class EventPolicy extends Model
 {
     protected $fillable = [
         'event_id', 'min_age', 'max_age', 'min_score',
-        'max_group_size', 'requires_approval', 'lottery_enabled', 'rules'
+        'max_group_size', 'manager_approval_quota', 'requires_approval', 'lottery_enabled', 'rules'
     ];
 
     protected function casts(): array

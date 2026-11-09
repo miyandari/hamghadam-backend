@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Event;
 use App\Models\Registration;
+use App\Models\WaitlistEntry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -25,9 +26,15 @@ class RegistrationController extends Controller
     {
         $user = $request->user();
 
-        if (!$user->student) {
+        if (!$user->student || $user->student->status !== 'active') {
             throw ValidationException::withMessages([
                 'student' => ['ابتدا باید اطلاعات دانشجویی خود را تکمیل کنید.'],
+            ]);
+        }
+
+        if ($user->student->university_id !== $event->university_id) {
+            throw ValidationException::withMessages([
+                'university' => ['ثبت‌نام فقط برای دانشجویان دانشگاه برگزارکننده مجاز است.'],
             ]);
         }
 
@@ -66,9 +73,18 @@ class RegistrationController extends Controller
                 ->count();
 
             if ($occupied >= $event->capacity) {
-                throw ValidationException::withMessages([
-                    'capacity' => ['ظرفیت این رویداد تکمیل شده است.'],
-                ]);
+                $position = (int) WaitlistEntry::where('event_id', $event->id)
+                    ->where('status', 'waiting')->max('position') + 1;
+
+                $entry = WaitlistEntry::firstOrCreate(
+                    ['event_id' => $event->id, 'user_id' => $user->id],
+                    ['position' => $position, 'status' => 'waiting']
+                );
+
+                return response()->json([
+                    'message' => 'ظرفیت تکمیل است؛ در فهرست انتظار قرار گرفتید.',
+                    'waitlist' => $entry,
+                ], 202);
             }
 
             $requiresApproval = (bool) optional($event->policy)->requires_approval;

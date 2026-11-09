@@ -1,58 +1,229 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# سامانه مدیریت مشارکت‌های فرهنگی «هم‌قدم»
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+این مخزن شامل بک‌اند Laravel و پنل مدیریتی وب سامانه هم‌قدم است. سامانه برای مدیریت ساختار دانشگاهی، کاربران و نقش‌ها، برنامه‌های فرهنگی، ثبت‌نام دانشجویان، امتیازدهی، قرعه‌کشی/تأیید، اطلاع‌رسانی، گزارش‌ها و آلبوم تصاویر طراحی شده است.
 
-## About Laravel
+> این README وضعیت پیاده‌سازی موجود در همین نسخه را توضیح می‌دهد. وجود جدول یا مدل در دیتابیس لزوماً به معنی تکمیل تمام گردش‌کارهای عملیاتی آن در رابط کاربری نیست.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## ۱. فناوری‌ها
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- PHP `^8.3`
+- Laravel `^13.17` (نسخه اجراشده در محیط توسعه پروژه: Laravel 13)
+- Laravel Sanctum `^4.0` برای توکن‌های API
+- PostgreSQL 16 در محیط Docker توسعه
+- Redis برای سرویس کش/صف در محیط Docker
+- رابط کاربری پنل: Blade، HTML، CSS و JavaScript
+- تقویم شمسی پنل: `persian-date` و `persian-datepicker` از CDN
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## ۲. نقش‌ها و حدود دسترسی
 
-## Learning Laravel
+| نقش | مسئولیت |
+|---|---|
+| `super_admin` | ایجاد و مدیریت دانشگاه‌ها، ایجاد/ویرایش کاربران و تخصیص نقش و دانشگاه، مشاهده برنامه‌ها و نظارت سراسری |
+| `cultural_manager` | ایجاد، ویرایش، انتشار و مدیریت برنامه‌های فرهنگی دانشگاه/دانشگاه‌های تخصیص‌یافته، ثبت امتیاز و مدیریت امکانات اجرایی مجاز |
+| `student` | تکمیل اطلاعات دانشجویی، مشاهده برنامه‌های منتشرشده و ثبت‌نام/پیگیری ثبت‌نام |
+| `observer` | نقش مشاهده‌گر؛ دسترسی‌ها مطابق مسیرها و مجوزهای تعریف‌شده در پروژه محدود است |
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+مدیر ارشد سامانه برنامه فرهنگی ایجاد نمی‌کند؛ ایجاد و ویرایش برنامه در مسیرهای API به نقش `cultural_manager` محدود شده است. مدیر ارشد امکان مشاهده برنامه‌ها و نظارت را دارد.
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## ۳. امکانات پیاده‌سازی‌شده
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+### مدیریت ساختار و کاربران
+- ثبت و ویرایش دانشگاه‌ها و مراکز.
+- ایجاد کاربران، تعیین نقش و تخصیص دانشگاه.
+- فعال/غیرفعال کردن حساب کاربری.
+- دسترسی سراسری مدیر ارشد با پرچم `users.is_super_admin`.
 
-## Agentic Development
+### برنامه‌های فرهنگی
+- تعریف انواع برنامه مانند کارگاه، همایش، اردو، گل‌گشت و مراسم.
+- ثبت عنوان، شرح، محل، ظرفیت و تاریخ‌های برنامه و بازه ثبت‌نام.
+- وضعیت‌های `draft`، `published`، `cancelled` و `completed`.
+- ویرایش برنامه پیش‌نویس و تغییر وضعیت آن.
+- انتخاب تاریخ با تقویم شمسی در پنل؛ زمان همه تاریخ‌ها در فرم روی ساعت `00:00:00` (ابتدای روز) تنظیم می‌شود.
+- تعریف عوامل مؤثر بر ضریب شانس قرعه‌کشی به‌صورت مستقل برای هر برنامه؛ مدیر عنوان عامل و ضریب عددی آن را تعیین می‌کند. این ضرایب شرط حداقل امتیاز یا مانع ثبت‌نام نیستند.
+- تعیین تعداد سهمیه انتخاب مستقیم مدیر بدون قرعه‌کشی.
+- فعال/غیرفعال کردن قرعه‌کشی برای متقاضیان باقی‌مانده.
+- فعال/غیرفعال کردن رزرو گروهی و تعیین حداکثر اعضای هر گروه.
+- تعیین نیاز به تأیید مدیر برای ثبت‌نام.
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+### ثبت‌نام و امتیازدهی
+- مدل‌های ثبت‌نام فردی و گروهی، وضعیت ثبت‌نام، امتیاز کل و شماره قرعه‌کشی در ساختار داده پیش‌بینی شده‌اند.
+- معیارهای امتیازدهی و ثبت امتیاز برای ثبت‌نام‌ها دارای API هستند.
+- عنوان عوامل و ضرایب اثر آن‌ها در `event_policies.rules.lottery_factors` برای هر برنامه ذخیره می‌شود.
+- تعریف و ذخیره عوامل در این نسخه انجام شده است؛ تطبیق خودکار سوابق تأییدشده دانشجو با عوامل و اعمال ضریب نهایی در الگوریتم قرعه‌کشی وزنی هنوز مرحله توسعه جداگانه است.
 
-```bash
-composer require laravel/boost --dev
+### امکانات مکمل
+- گزارش داشبورد و گزارش رویداد.
+- اعلان‌های شخصی و ارسال اعلان رویدادی.
+- آلبوم تصاویر رویداد و بارگذاری رسانه.
+- ثبت و مدیریت بازخورد رویداد.
+- نوار پیشرفت هنگام اجرای درخواست‌های API در پنل.
 
-php artisan boost:install
+## ۴. ساختار پوشه‌ها
+
+```text
+backend/
+├── app/
+│   ├── Http/
+│   │   ├── Controllers/Api/   # کنترلرهای احراز هویت، دانشگاه، کاربر، رویداد، ثبت‌نام و ...
+│   │   └── Middleware/        # میان‌افزارهای نقش و دسترسی
+│   ├── Models/                # مدل‌های Eloquent
+│   └── Providers/             # ارائه‌دهندگان سرویس Laravel
+├── bootstrap/                 # راه‌اندازی فریم‌ورک
+├── config/                    # تنظیمات Laravel
+├── database/
+│   ├── factories/              # کارخانه‌های داده تست
+│   ├── migrations/             # نسخه‌بندی ساختار دیتابیس
+│   └── seeders/                # داده‌های اولیه
+├── public/                     # ورودی وب و فایل‌های عمومی
+├── resources/
+│   └── views/admin/            # پنل مدیریتی Blade
+├── routes/
+│   ├── api.php                 # مسیرهای API نسخه ۱
+│   └── web.php                 # مسیرهای وب
+├── storage/                    # لاگ‌ها، کش و فایل‌های ذخیره‌شده
+├── tests/                      # تست‌های خودکار
+├── composer.json
+├── Dockerfile
+└── .env.example
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+فایل پنل اصلی: `resources/views/admin/panel.blade.php`
 
-## Contributing
+## ۵. مدل‌ها و جداول مهم
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+| جدول | کاربرد |
+|---|---|
+| `users` | حساب‌های کاربری و وضعیت مدیر ارشد |
+| `universities` | دانشگاه‌ها و مراکز |
+| `roles`, `user_university_roles` | نقش‌ها و تخصیص نقش به دانشگاه |
+| `students` | اطلاعات تکمیلی دانشجو |
+| `events` | برنامه‌ها، زمان‌ها، ظرفیت و وضعیت؛ شامل پرچم رزرو گروهی |
+| `event_policies` | حداقل امتیاز، حداکثر اندازه گروه، سهمیه انتخاب مستقیم مدیر، قرعه‌کشی و نیاز به تأیید |
+| `registration_groups` | گروه‌های ثبت‌نام |
+| `registrations` | ثبت‌نام، وضعیت، نوع فردی/گروهی و امتیاز کل |
+| `scoring_criteria`, `registration_scores` | معیارها و امتیازهای ثبت‌نام |
+| `waitlist_entries` | فهرست انتظار |
+| `feedbacks` | بازخوردهای رویداد |
+| `event_albums`, `event_album_media` | آلبوم و رسانه‌های رویداد |
+| `notifications` | اعلان‌ها |
+| `audit_logs` | سوابق ممیزی |
+| `personal_access_tokens` | توکن‌های Sanctum |
 
-## Code of Conduct
+مهاجرت افزایشی این نسخه ستون `manager_approval_quota` را به `event_policies` اضافه می‌کند. این migration داده‌های قبلی را حذف نمی‌کند.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## ۶. API
 
-## Security Vulnerabilities
+تمام مسیرهای API زیر پیشوند `/api/v1` قرار دارند. احراز هویت مسیرهای خصوصی با `Authorization: Bearer <token>` و Sanctum انجام می‌شود.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+گروه‌های اصلی مسیرها:
 
-## License
+- احراز هویت: `POST /login`، `POST /register`، `POST /logout`، `GET /profile`
+- دانشگاه‌ها: `GET /universities`، `POST /universities`، `GET /universities/{id}`، `PUT /universities/{id}`
+- کاربران: `GET /users`، `POST /users`، `GET /users/{id}`، `PUT /users/{id}`، `PATCH /users/{id}/status`
+- برنامه‌ها: `GET /events` عمومی، `GET /managed-events`، `GET /managed-events/{id}`، `POST /events`، `PUT/PATCH /events/{id}`، `DELETE /events/{id}`
+- ثبت‌نام: `POST /events/{id}/register`، `GET /my-registrations`، `GET /registrations/{id}`، `DELETE /registrations/{id}`
+- امتیازدهی: مسیرهای `/events/{id}/scoring-criteria`، `/scores` و `/scoring-results`
+- گزارش: `/reports/dashboard` و `/reports/events/{id}`
+- اعلان: `/notifications` و مسیرهای ارسال/خواندن اعلان
+- آلبوم: `/events/{id}/albums` و مسیرهای رسانه
+- بازخورد: `/events/{id}/feedback`
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+مرجع دقیق مجوز هر مسیر در `routes/api.php` و کنترلر مربوطه است.
+
+## ۷. راه‌اندازی در محیط توسعه Docker ویندوز
+
+دستورات زیر را از ریشه پروژه (پوشه‌ای که `docker-compose.yml` یا `compose.yaml` در آن قرار دارد) در PowerShell اجرا کنید.
+
+```powershell
+# مشاهده وضعیت سرویس‌ها
+docker compose ps
+
+# نصب/به‌روزرسانی وابستگی‌های PHP در کانتینر
+docker compose exec app composer install
+
+# اجرای migrationهای جدید و اعمالی که هنوز اجرا نشده‌اند
+docker compose exec app php artisan migrate
+
+# پاک‌سازی کش‌های Laravel
+docker compose exec app php artisan optimize:clear
+
+# در صورت نیاز به بازسازی autoload
+docker compose exec app composer dump-autoload
+```
+
+**مهم:** فایل `.env` موجود پروژه را حفظ کنید. مقادیر اتصال دیتابیس و کلید برنامه باید از محیط فعلی گرفته شوند. برای به‌روزرسانی معمول این نسخه، فقط migration افزایشی اجرا می‌شود؛ از `migrate:fresh` و حذف volume دیتابیس استفاده نکنید.
+
+در این پروژه PHP و Artisan باید از طریق کانتینر اجرا شوند؛ اجرای مستقیم PHP ویندوز لازم نیست.
+
+## ۸. تقویم شمسی
+
+پنل برای نمایش و انتخاب تاریخ شمسی از دو کتابخانه `persian-date` و `persian-datepicker` استفاده می‌کند که از CDN دریافت می‌شوند. بنابراین مرورگر هنگام بازکردن پنل باید به CDN دسترسی داشته باشد. مقدار انتخاب‌شده شمسی در پنل به تاریخ میلادی قابل‌قبول برای API تبدیل می‌شود. ساعت ارسالی برای هر چهار فیلد تاریخ به‌صورت ثابت `00:00:00` است.
+
+## ۹. کنترل کیفیت و تست
+
+پس از دریافت نسخه، در محیط توسعه دستورات زیر را اجرا کنید:
+
+```powershell
+# بررسی syntax فایل‌های PHP
+docker compose exec app sh -lc "find app routes database/migrations -name '*.php' -print0 | xargs -0 -n1 php -l"
+
+# اجرای تست‌ها
+docker compose exec app php artisan test
+
+# مشاهده مسیرهای API
+docker compose exec app php artisan route:list --path=api/v1
+```
+
+## ۱۰. ثبت نسخه در Git و ارسال به مخزن
+
+ابتدا از ریشه پروژه وضعیت را بررسی کنید:
+
+```powershell
+git status
+git branch --show-current
+```
+
+فایل‌های `.env`، فایل‌های حاوی رمز و توکن، خروجی‌های حجیم، و داده‌های واقعی کاربران نباید commit شوند. قبل از stage کردن، مطمئن شوید `.env` در `.gitignore` قرار دارد:
+
+```powershell
+git check-ignore .env
+```
+
+سپس تغییرات را بازبینی و commit کنید:
+
+```powershell
+git add backend
+git status
+git diff --cached --stat
+git diff --cached
+
+git commit -m "Improve event management and documentation"
+```
+
+برای ارسال شاخه فعلی به GitHub یا remote تنظیم‌شده:
+
+```powershell
+git push -u origin HEAD
+```
+
+اگر مخزن remote هنوز تنظیم نشده است، ابتدا آدرس مخزن را از صفحه GitHub دریافت و تنظیم کنید:
+
+```powershell
+git remote -v
+git remote add origin <REPOSITORY_URL>
+git push -u origin HEAD
+```
+
+`<REPOSITORY_URL>` را با آدرس واقعی مخزن خود جایگزین کنید. پیش از push، خروجی `git diff --cached` را بررسی کنید تا هیچ فایل محرمانه‌ای وارد commit نشده باشد.
+
+## ۱۱. نکات پشتیبان‌گیری و ایمنی داده
+
+- پیش از جایگزینی فایل‌ها از پوشه `backend` نسخه پشتیبان بگیرید.
+- `.env` واقعی را با فایل نمونه داخل بسته جایگزین نکنید.
+- volumeهای PostgreSQL و Redis را حذف نکنید.
+- از `docker compose down -v` و `php artisan migrate:fresh` برای نصب این نسخه استفاده نکنید.
+- فایل‌های آپلودشده و اطلاعات دیتابیس باید در backup مستقل نگهداری شوند.
+
+
+## ضرایب شانس قرعه‌کشی
+در تعریف هر برنامه، مدیر فرهنگی می‌تواند عنوان عوامل مؤثر و ضریب هر عامل را مستقل از سایر برنامه‌ها ثبت کند. نمونه عوامل می‌تواند مشارکت فرهنگی، عضویت تشکلی یا اولین حضور در نوع خاصی از برنامه باشد. این عوامل شرط حداقل امتیاز برای ثبت‌نام نیستند. داده‌ها در `event_policies.rules.lottery_factors` ذخیره می‌شوند. این نسخه فرم تعریف و ذخیره‌سازی را فراهم می‌کند؛ اتصال سوابق تأییدشده دانشجو به الگوریتم قرعه‌کشی وزنی نیازمند توسعه جداگانه است.
