@@ -67,6 +67,16 @@ class User extends Authenticatable
         return $this->hasMany(Feedback::class);
     }
 
+    public function studentCulturalRecords(): HasMany
+    {
+        return $this->hasMany(StudentCulturalRecord::class);
+    }
+
+    public function lotteryFactorAwards(): HasMany
+    {
+        return $this->hasMany(EventLotteryFactorAward::class);
+    }
+
     public function universities(): BelongsToMany
     {
         return $this->belongsToMany(

@@ -44,6 +44,7 @@ class ScoringController extends Controller
     {
         $this->authorizeEvent($request, $event);
         abort_unless($registration->event_id === $event->id, 404);
+        abort_unless($registration->status === 'confirmed', 422, 'امتیازدهی فقط برای ثبت‌نام قطعی امکان‌پذیر است.');
         $data = $request->validate(['scores'=>'required|array|min:1','scores.*.criterion_id'=>'required|integer|distinct|exists:scoring_criteria,id','scores.*.score'=>'required|integer|min:0','scores.*.note'=>'nullable|string|max:5000']);
         $result = DB::transaction(function () use ($data, $event, $registration, $request) {
             foreach ($data['scores'] as $item) {
@@ -63,6 +64,6 @@ class ScoringController extends Controller
     public function results(Request $request, Event $event)
     {
         $this->authorizeEvent($request, $event);
-        return response()->json(['results'=>$event->registrations()->with('user:id,name,email','scores.criterion')->orderByDesc('total_score')->paginate(50)]);
+        return response()->json(['results'=>$event->registrations()->with('user:id,name,email','scores.criterion')->where('status', 'confirmed')->orderByDesc('total_score')->paginate(50)]);
     }
 }

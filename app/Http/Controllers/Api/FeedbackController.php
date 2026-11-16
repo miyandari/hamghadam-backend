@@ -18,6 +18,13 @@ class FeedbackController extends Controller
         return response()->json(['message'=>'بازخورد ثبت شد و پس از بررسی نمایش داده می‌شود.','feedback'=>$feedback],201);
     }
 
+    public function manageIndex(Request $request, Event $event)
+    {
+        $u = $request->user();
+        abort_unless($u->is_super_admin || $u->universityRoles()->where('university_id', $event->university_id)->where('is_active', true)->whereHas('role', fn ($q) => $q->where('name', 'cultural_manager'))->exists(), 403);
+        return response()->json(['feedbacks' => $event->feedbacks()->with('user:id,name')->latest()->paginate(30)]);
+    }
+
     public function moderate(Request $request, Event $event, Feedback $feedback)
     {
         $u=$request->user(); abort_unless($u->is_super_admin || $u->universityRoles()->where('university_id',$event->university_id)->where('is_active',true)->whereHas('role',fn($q)=>$q->where('name','cultural_manager'))->exists(),403);

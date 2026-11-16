@@ -39,4 +39,6 @@ class Event extends Model
     public function waitlistEntries(): HasMany { return $this->hasMany(WaitlistEntry::class); }
     public function feedbacks(): HasMany { return $this->hasMany(Feedback::class); }
     public function albums(): HasMany { return $this->hasMany(EventAlbum::class); }
+    public function lotteryFactorAwards(): HasMany { return $this->hasMany(EventLotteryFactorAward::class); }
+    public function lotteryRuns(): HasMany { return $this->hasMany(EventLotteryRun::class); }
 }

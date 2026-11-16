@@ -15,7 +15,11 @@ class NotificationController extends Controller
     {
         $query=DB::table('notifications')->where('user_id',$request->user()->id)->orderByDesc('created_at');
         if ($request->boolean('unread')) $query->whereNull('read_at');
-        return response()->json(['notifications'=>$query->paginate(30),'unread_count'=>DB::table('notifications')->where('user_id',$request->user()->id)->whereNull('read_at')->count()]);
+        $notifications = $query->paginate(30)->through(function ($row) {
+            $row->data = json_decode($row->data, true) ?: [];
+            return $row;
+        });
+        return response()->json(['notifications'=>$notifications,'unread_count'=>DB::table('notifications')->where('user_id',$request->user()->id)->whereNull('read_at')->count()]);
     }
 
     public function read(Request $request, string $notification)
@@ -44,8 +48,9 @@ class NotificationController extends Controller
     {
         $u=$request->user();
         abort_unless($u->is_super_admin || $u->universityRoles()->where('university_id',$event->university_id)->where('is_active',true)->whereHas('role',fn($q)=>$q->where('name','cultural_manager'))->exists(),403);
-        $data=$request->validate(['title'=>'required|string|max:255','body'=>'required|string|max:5000','audience'=>'required|in:registered,confirmed,all']);
-        $query=$event->registrations()->when($data['audience']==='confirmed',fn($q)=>$q->where('status','confirmed'))->when($data['audience']==='registered',fn($q)=>$q->whereIn('status',['pending','confirmed']))->select('user_id')->distinct();
+        $data=$request->validate(['title'=>'required|string|max:255','body'=>'required|string|max:5000','audience'=>'sometimes|in:registered,confirmed,all']);
+        $audience=$data['audience']??'registered';
+        $query=$event->registrations()->when($audience==='confirmed',fn($q)=>$q->where('status','confirmed'))->when($audience==='registered',fn($q)=>$q->whereIn('status',['pending','pending_approval','confirmed','waitlisted']))->select('user_id')->distinct();
         $ids=$query->pluck('user_id'); $rows=[];
         foreach($ids as $id) $rows[]=['id'=>(string)Str::uuid(),'user_id'=>$id,'channel'=>'database','type'=>'App\\Notifications\\EventMessage','data'=>json_encode(['title'=>$data['title'],'body'=>$data['body'],'event_id'=>$event->id],JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR),'created_at'=>now(),'updated_at'=>now()];
         if($rows) DB::table('notifications')->insert($rows);

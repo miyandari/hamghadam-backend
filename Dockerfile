@@ -1,10 +1,14 @@
+
 FROM php:8.4-cli-bookworm
 
-RUN sed -i 's|http://deb.debian.org|https://deb.debian.org|g' /etc/apt/sources.list.d/debian.sources \
-    && apt-get -o Acquire::Retries=5 update \
-    && apt-get install -y --no-install-recommends \
-       git unzip libpq-dev libzip-dev libicu-dev \
-    && docker-php-ext-install \
+RUN apt-get -o Acquire::Retries=10 \
+        -o Acquire::http::Timeout=120 \
+        -o Acquire::https::Timeout=120 update \
+    && apt-get -o Acquire::Retries=10 \
+        -o Acquire::http::Timeout=120 \
+        -o Acquire::https::Timeout=120 install -y --no-install-recommends \
+       git unzip libpq-dev libzip-dev libicu-dev libonig-dev \
+    && docker-php-ext-install -j$(nproc) \
        pdo_pgsql pgsql pcntl zip intl mbstring \
     && pecl install redis \
     && docker-php-ext-enable redis \

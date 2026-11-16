@@ -12,6 +12,9 @@ use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\AlbumController;
 use App\Http\Controllers\Api\FeedbackController;
+use App\Http\Controllers\Api\StudentCulturalRecordController;
+use App\Http\Controllers\Api\GroupRegistrationController;
+use App\Http\Controllers\Api\LotteryController;
 
 Route::prefix('v1')->group(function () {
 
@@ -30,6 +33,13 @@ Route::prefix('v1')->group(function () {
         Route::get('/student', [StudentController::class, 'show']);
         Route::post('/student', [StudentController::class, 'store']);
         Route::put('/student', [StudentController::class, 'update']);
+        Route::get('/student/cultural-records', [StudentCulturalRecordController::class, 'index']);
+        Route::post('/student/cultural-records', [StudentCulturalRecordController::class, 'store']);
+        Route::put('/student/cultural-records/{record}', [StudentCulturalRecordController::class, 'update']);
+        Route::delete('/student/cultural-records/{record}', [StudentCulturalRecordController::class, 'destroy']);
+        Route::post('/groups/join', [GroupRegistrationController::class, 'join']);
+        Route::get('/my-groups', [GroupRegistrationController::class, 'mine']);
+        Route::get('/events/{event}/albums', [AlbumController::class, 'index']);
 
         // حساب کاربری
         Route::post('/logout', [AuthController::class, 'logout']);
@@ -42,6 +52,7 @@ Route::prefix('v1')->group(function () {
             '/events/{event}/register',
             [RegistrationController::class, 'store']
         );
+        Route::post('/events/{event}/groups', [GroupRegistrationController::class, 'create']);
 
         Route::get(
             '/registrations/{registration}',
@@ -79,18 +90,27 @@ Route::prefix('v1')->group(function () {
             Route::put('/events/{event}/scoring-criteria/{criterion}', [ScoringController::class, 'updateCriterion']);
             Route::post('/events/{event}/registrations/{registration}/scores', [ScoringController::class, 'score']);
             Route::get('/events/{event}/scoring-results', [ScoringController::class, 'results']);
+            Route::get('/events/{event}/lottery-applicants', [LotteryController::class, 'applicants']);
+            Route::post('/events/{event}/lottery-factor-awards', [LotteryController::class, 'awardFactor']);
+            Route::post('/events/{event}/run-lottery', [LotteryController::class, 'run']);
+            Route::get('/events/{event}/lottery-results', [LotteryController::class, 'results']);
+            Route::post('/events/{event}/registrations/{registration}/manager-approve', [LotteryController::class, 'approve']);
+            Route::patch('/events/{event}/registrations/{registration}/moderate', [LotteryController::class, 'moderateRegistration']);
+            Route::get('/students/pending', [StudentController::class, 'pending']);
+            Route::patch('/students/{student}/moderate', [StudentController::class, 'moderate']);
+            Route::patch('/student-cultural-records/{record}/moderate', [StudentCulturalRecordController::class, 'moderate']);
 
         });
 
         // گزارش‌ها و امکانات نظارتی برای مدیر ارشد و مدیر فرهنگی
         Route::middleware('role:super_admin,cultural_manager')->group(function () {
-            Route::get('/events/{event}/albums', [AlbumController::class, 'index']);
             Route::post('/events/{event}/albums', [AlbumController::class, 'store']);
             Route::post('/events/{event}/albums/{album}/media', [AlbumController::class, 'upload']);
             Route::delete('/events/{event}/albums/{album}/media/{media}', [AlbumController::class, 'destroyMedia']);
             Route::delete('/events/{event}/albums/{album}', [AlbumController::class, 'destroy']);
             Route::get('/reports/dashboard', [ReportController::class, 'dashboard']);
             Route::get('/reports/events/{event}', [ReportController::class, 'event']);
+            Route::get('/events/{event}/feedback-management', [FeedbackController::class, 'manageIndex']);
             Route::patch('/events/{event}/feedback/{feedback}', [FeedbackController::class, 'moderate']);
             Route::post('/events/{event}/notifications', [NotificationController::class, 'sendEvent']);
         });

@@ -7,3 +7,4 @@ Route::get('/', function () {
 });
 
 Route::view('/admin', 'admin.panel')->name('admin.panel');
+Route::view('/student', 'student.portal')->name('student.portal');

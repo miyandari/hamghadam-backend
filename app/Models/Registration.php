@@ -10,7 +10,7 @@ class Registration extends Model
 {
     protected $fillable = [
         'event_id', 'user_id', 'registration_group_id', 'status',
-        'registration_type', 'total_score', 'lottery_number',
+        'registration_type', 'selection_method', 'total_score', 'lottery_weight', 'lottery_number', 'lottery_rank',
         'registered_at', 'confirmed_at'
     ];
 
@@ -18,6 +18,7 @@ class Registration extends Model
     {
         return [
             'total_score' => 'decimal:2',
+            'lottery_weight' => 'decimal:4',
             'registered_at' => 'datetime',
             'confirmed_at' => 'datetime',
         ];

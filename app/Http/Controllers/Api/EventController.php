@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Event;
+use App\Models\EventLotteryRun;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
 
 class EventController extends Controller
 {
@@ -112,7 +114,7 @@ class EventController extends Controller
             'category' => ['required', 'string', 'max:100'],
             'venue' => ['nullable', 'string', 'max:255'],
             'starts_at' => ['required', 'date'],
-            'ends_at' => ['required', 'date', 'after:starts_at'],
+            'ends_at' => ['required', 'date', 'after_or_equal:starts_at'],
             'registration_starts_at' => ['required', 'date'],
             'registration_ends_at' => [
                 'required',
@@ -130,20 +132,24 @@ class EventController extends Controller
             'policy.requires_approval' => ['sometimes', 'boolean'],
             'policy.rules' => ['sometimes', 'array'],
             'policy.rules.lottery_factors' => ['sometimes', 'array', 'max:30'],
-            'policy.rules.lottery_factors.*.name' => ['required', 'string', 'max:120'],
+            'policy.rules.lottery_factors.*.name' => ['required', 'string', 'max:120', 'distinct'],
             'policy.rules.lottery_factors.*.coefficient' => ['required', 'numeric', 'gt:0', 'max:100'],
         ]);
 
+        if ((int) ($validated['policy']['manager_approval_quota'] ?? 0) > (int) $validated['capacity']) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['policy.manager_approval_quota' => ['سهمیه انتخاب مستقیم مدیر نمی‌تواند از ظرفیت برنامه بیشتر باشد.']]);
+        }
         $this->authorizeUniversity($request, $validated['university_id']);
 
         $validated['created_by'] = $request->user()->id;
         $policy = $validated['policy'] ?? [];
         unset($validated['policy']);
 
-        $event = Event::create($validated);
-        if ($policy) {
-            $event->policy()->create($policy);
-        }
+        $event = DB::transaction(function () use ($validated, $policy) {
+            $created = Event::create($validated);
+            if ($policy) $created->policy()->create($policy);
+            return $created;
+        });
 
         return response()->json([
             'message' => 'رویداد فرهنگی ایجاد شد.',
@@ -168,9 +174,9 @@ class EventController extends Controller
             'category' => ['sometimes', 'required', 'string', 'max:100'],
             'venue' => ['sometimes', 'nullable', 'string', 'max:255'],
             'starts_at' => ['sometimes', 'required', 'date'],
-            'ends_at' => ['sometimes', 'required', 'date', 'after:starts_at'],
+            'ends_at' => ['sometimes', 'required', 'date', 'after_or_equal:starts_at'],
             'registration_starts_at' => ['sometimes', 'required', 'date'],
-            'registration_ends_at' => ['sometimes', 'required', 'date'],
+            'registration_ends_at' => ['sometimes', 'required', 'date', 'before_or_equal:starts_at'],
             'capacity' => ['sometimes', 'required', 'integer', 'min:1'],
             'status' => ['sometimes', 'required', Rule::in(['draft', 'published', 'cancelled', 'completed'])],
             'is_group_registration_allowed' => ['sometimes', 'boolean'],
@@ -181,16 +187,27 @@ class EventController extends Controller
             'policy.requires_approval' => ['sometimes', 'boolean'],
             'policy.rules' => ['sometimes', 'array'],
             'policy.rules.lottery_factors' => ['sometimes', 'array', 'max:30'],
-            'policy.rules.lottery_factors.*.name' => ['required', 'string', 'max:120'],
+            'policy.rules.lottery_factors.*.name' => ['required', 'string', 'max:120', 'distinct'],
             'policy.rules.lottery_factors.*.coefficient' => ['required', 'numeric', 'gt:0', 'max:100'],
         ]);
 
         $policy = $validated['policy'] ?? null;
-        unset($validated['policy']);
-        $event->update($validated);
-        if ($policy !== null) {
-            $event->policy()->updateOrCreate(['event_id' => $event->id], $policy);
+        $newCapacity = (int) ($validated['capacity'] ?? $event->capacity);
+        if (EventLotteryRun::where('event_id', $event->id)->exists() && ($policy !== null || array_key_exists('capacity', $validated))) {
+            abort(422, 'پس از اجرای قرعه‌کشی، تغییر سیاست‌ها و ظرفیت برنامه برای حفظ اعتبار نتیجه مجاز نیست.');
         }
+        $occupiedNow = $event->registrations()->whereIn('status', ['confirmed', 'pending_approval'])->count();
+        if ($newCapacity < $occupiedNow) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['capacity' => ['ظرفیت جدید نمی‌تواند کمتر از تعداد افراد تأییدشده فعلی باشد.']]);
+        }
+        if ((int) ($policy['manager_approval_quota'] ?? $event->policy?->manager_approval_quota ?? 0) > $newCapacity) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['policy.manager_approval_quota' => ['سهمیه انتخاب مستقیم مدیر نمی‌تواند از ظرفیت برنامه بیشتر باشد.']]);
+        }
+        unset($validated['policy']);
+        DB::transaction(function () use ($event, $validated, $policy) {
+            $event->update($validated);
+            if ($policy !== null) $event->policy()->updateOrCreate(['event_id' => $event->id], $policy);
+        });
 
         return response()->json([
             'message' => 'رویداد به‌روزرسانی شد.',
